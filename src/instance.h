@@ -16,8 +16,10 @@ struct Instance {
     int edge_count;
     // vector<bool> ~ dynamic bitset
     vector<vector<bool>> partitions; // n partitions * n nodes 
-    map<const int, pair<int, int>> edges; // edge index, (node i , node j)
-    map<const int, pair<int, int>> reverse_edges; // edge index, (node j, node i)
+    multimap<const int, int> neighbours_of_node; // node, neighbours
+    // No need to save edges in a map/list
+    //map<const int, pair<int, int>> edges; // edge index, (node i , node j)
+    //map<const int, pair<int, int>> reverse_edges; // edge index, (node j, node i)
     // TODO: above is friggin' ugly -> maybe go back to
     // multimap<const int, pair<int, int>> edges_of_node; // node, (node, extremity)
     // or
@@ -27,7 +29,8 @@ struct Instance {
     // traverse adjacency matrix
     //      if cell (i, j) is true
     //          make_pair(i, j) is an edge
-    multimap<const int, pair<int, int>> edges_of_partition; // partition, edges
+    // No need to keep a multimap for edges in partition, can be extracted
+    //multimap<const int, pair<int, int>> edges_of_partition; // partition, edges
     map<const pair<int, int>, int> traffic_of_edge; // maximum n*(n-1)/2 edges
 };
 

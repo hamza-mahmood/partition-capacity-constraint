@@ -34,6 +34,49 @@ bool is_coherent(const vector<vector<bool>> &partitions) {
 bool is_over_capacity(const Instance &instance) {
     //for each partition
       //  traffic in+out partition <= T
+    for (int p = 0; p < int(instance.partitions.size()); ++p) {
+        cout << "Partition " << p << endl;
+
+        int partition_capacity = 0;
+        
+        vector<int> nodes;
+        for (int n = 0; n < int(instance.partitions[p].size()); ++n) {
+            if (instance.partitions[p][n] == true) {
+                nodes.emplace_back(n);
+            }
+        }
+        
+        vector<int>::iterator node_it;
+        for (node_it = nodes.begin(); node_it != nodes.end(); ++node_it) {
+            auto neighbours = instance.neighbours_of_node.equal_range(*node_it);
+            for (auto neighbour_it = neighbours.first;
+                 neighbour_it != neighbours.second;
+                 ++neighbour_it)
+            {
+                int node_i = *node_it;
+                int node_j = neighbour_it->second;
+                cout << "  edge " << node_i << " " << node_j << endl;
+                if (node_i < node_j) {
+                    pair<int, int> edge(node_i, node_j);
+                    int traffic = instance.traffic_of_edge.find(edge)->second;
+                    partition_capacity += traffic;
+                    cout << "    traffic: " << traffic << endl;
+                } else {
+                    pair<int, int> edge(node_j, node_i);
+                    int traffic = instance.traffic_of_edge.find(edge)->second;
+                    partition_capacity += traffic;
+                    cout << "    traffic: " << traffic << endl;
+                }
+            }
+        }
+        cout << "partition traffic: " << partition_capacity << endl;
+        if (partition_capacity > instance.max_partition_traffic) {
+            return true;
+        }
+    }
+    return false;
+
+    /*
     for (int p = 0; p < instance.node_count; ++p) {
         int partition_capacity = 0;
         
@@ -61,6 +104,7 @@ bool is_over_capacity(const Instance &instance) {
         }
     }
     return false;
+    */
 }
 
 // Move all nodes from a partition to another partition.
@@ -171,14 +215,12 @@ void read_instance(ifstream &instance_file, Instance *instance) {
         instance_file >> traffic;
         
         assert(node_i < node_j);
+        
         pair<int, int> edge(node_i, node_j);
         pair<int, int> reverse_edge(node_j, node_i);
         
-        pair<int, pair<int, int>> index_edge(i, edge);
-        pair<int, pair<int, int>> index_reverse_edge(i, reverse_edge);
-        
-        instance->edges.insert(index_edge);
-        instance->reverse_edges.insert(index_reverse_edge);
+        instance->neighbours_of_node.insert(edge);
+        instance->neighbours_of_node.insert(reverse_edge);
 
         pair<pair<int, int>, int> traffic_of_edge(edge, traffic); 
         instance->traffic_of_edge.insert(traffic_of_edge);
@@ -205,13 +247,14 @@ void show_instance(const Instance &instance) {
     cout << endl;
 
     cout << tab << "Edge count: " << instance.edge_count << endl;
+    /*
     cout << tab << tab;
     for (auto it = instance.edges.begin(); it != instance.edges.end(); ++it) {
         pair<int, int> edge = it->second;
         cout << edge.first << "-" << edge.second << " ";
     }
     cout << endl;
-
+    */
     for (int i = 0; i < instance.node_count; ++i) {
         cout << tab << "Partition " << i << ": ";
         for (int j = 0; j < instance.node_count; ++j) {
