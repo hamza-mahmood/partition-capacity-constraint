@@ -19,6 +19,8 @@ int main(int argc, char* argv[]) {
             // out argument: always a pointer so always &something
             // spot side-effects by /&
             read_instance(instance_file, &instance);
+            naive_initialize_partitions(&instance);
+            cout << "NAIVE INIT" << endl;
             show_instance(instance);
 
             instance_file.seekg(0, instance_file.beg);
@@ -26,12 +28,27 @@ int main(int argc, char* argv[]) {
             Instance test_instance;
             read_instance(instance_file, &test_instance);
             mock_initialize_partitions(&test_instance);
-
-            show_instance(test_instance);
+            cout << "MANUAL INIT" << endl;
+            //show_instance(test_instance);
             while (!is_coherent(test_instance.partitions)) {
                 coherence_step(&test_instance.partitions);
-                show_instance(test_instance);
+                //show_instance(test_instance);
             }
+            show_instance(test_instance);
+            
+            instance_file.seekg(0, instance_file.beg);
+
+            Instance test_instance2;
+            read_instance(instance_file, &test_instance2);
+            greedy_initialize_partitions(&test_instance2);
+            cout << "GREEDY INIT" << endl;
+            //show_instance(test_instance2);
+            while (!is_coherent(test_instance2.partitions)) {
+                coherence_step(&test_instance2.partitions);
+                //show_instance(test_instance2);
+            }
+            show_instance(test_instance2);
+
         } 
     }
     return 0;
