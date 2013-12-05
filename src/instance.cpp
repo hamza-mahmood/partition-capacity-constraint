@@ -51,11 +51,42 @@ void nodes_in_partition(const int p, const Instance &instance,
     }
 }
 
-// Compute traffic of partition p.
-//      @param[in] p: index of partition
+// Compute inbound and outbound traffic of a set of nodes.
+//      @param[in] p: partition
 //      @param[in] instance: instance
 //      @return traffic
-int traffic(const vector<int> &nodes, const Instance &instance) {
+int intra_traffic(const int p, const Instance &instance) {
+    vector<int> nodes;
+    nodes_in_partition(p, instance, &nodes);
+    int traffic = 0;
+    for (auto node_it = nodes.begin(); node_it != nodes.end(); ++node_it) {
+        auto neighbours = instance.neighbours_of_node.equal_range(*node_it);
+        for (auto neighbour_it = neighbours.first;
+             neighbour_it != neighbours.second;
+             ++neighbour_it)
+        {
+            int node_i = *node_it; int node_j = neighbour_it->second;
+
+            if (instance.partitions[p][node_j]) {
+                if (node_i < node_j) {
+                    pair<int, int> edge(node_i, node_j);
+                    int e_traffic = instance.traffic_of_edge.find(edge)->second;
+                    traffic += e_traffic;
+                } else {
+                    pair<int, int> edge(node_j, node_i);
+                    int e_traffic = instance.traffic_of_edge.find(edge)->second;
+                    traffic += e_traffic;
+                }
+            }
+        }
+    }
+    return traffic / 2;
+}
+// Compute inbound and outbound traffic of a set of nodes.
+//      @param[in] nodes: set of nodes.
+//      @param[in] instance: instance
+//      @return traffic
+int in_out_node_traffic(const vector<int> &nodes, const Instance &instance) {
     int traffic = 0;
     for (auto node_it = nodes.begin(); node_it != nodes.end(); ++node_it) {
         auto neighbours = instance.neighbours_of_node.equal_range(*node_it);
@@ -80,14 +111,65 @@ int traffic(const vector<int> &nodes, const Instance &instance) {
     return traffic;
 }
 
-int inter_partition_traffic(const Instance &instance) {
+int in_out_traffic(const int p, const Instance &instance) {
+    vector<int> nodes;
+    nodes_in_partition(p, instance, &nodes);
     int traffic = 0;
-    for (size_t i = 0; i < instance.partitions.size(); ++i) {
-        for (size_t j = 0; j < i; j++) {
+    for (auto node_it = nodes.begin(); node_it != nodes.end(); ++node_it) {
+        auto neighbours = instance.neighbours_of_node.equal_range(*node_it);
+        for (auto neighbour_it = neighbours.first;
+             neighbour_it != neighbours.second;
+             ++neighbour_it)
+        {
+            int node_i = *node_it;
+            int node_j = neighbour_it->second;
             
+            if (node_i < node_j) {
+                pair<int, int> edge(node_i, node_j);
+                int edge_traffic = instance.traffic_of_edge.find(edge)->second;
+                traffic += edge_traffic;
+            } else {
+                if (!instance.partitions[p][node_j]) {
+                    pair<int, int> edge(node_j, node_i);
+                    int edge_traffic = instance.traffic_of_edge.find(edge)->second;
+                    traffic += edge_traffic;
+                }
+            }
         }
     }
     return traffic;
+}
+
+// Compute traffic on the entire graph.
+//      @param[in] instance: instance containing the graph
+int total_traffic(const Instance &instance) {
+    int traffic = 0;
+    auto begin(instance.traffic_of_edge);
+    for (auto edge_it = instance.traffic_of_edge.begin();
+         edge_it != instance.traffic_of_edge.end();
+         ++edge_it) {
+        traffic += edge_it->second;
+    }
+    cout << "Total traffic: " << traffic << endl;
+    return traffic;
+}
+
+// Compute intra partition traffic on the entire graph.
+//      @param[in] instance: instance containing the graph
+int total_intra_traffic(const Instance &instance) {
+    int traffic = 0;
+    for (int i = 0; i < int(instance.partitions.size()); ++i) {
+       traffic += intra_traffic(i, instance); 
+    }
+    cout << "Total intra traffic: " << traffic << endl;
+    return traffic;
+}
+
+// Compute inter partition traffic on the entire graph.
+//      @param[in] instance: instance containing the graph
+int total_inter_traffic(const Instance &instance) {
+    return total_traffic(instance)
+           - total_intra_traffic(instance);
 }
 
 // Compute load for each partition.
@@ -97,9 +179,7 @@ bool is_over_capacity(const Instance &instance) {
     for (int p = 0; p < int(instance.partitions.size()); ++p) {
         cout << "Partition " << p << endl;
 
-        vector<int> nodes;
-        nodes_in_partition(p, instance, &nodes);
-        int partition_traffic = traffic(nodes, instance);
+        int partition_traffic = in_out_traffic(p, instance);
         cout << "    partition traffic: " << partition_traffic << endl;
         if (partition_traffic > instance.max_partition_traffic) {
             return true;
@@ -235,6 +315,9 @@ void show_instance(const Instance &instance) {
     cout << tab << "Over capacity ? " 
          << (is_over_capacity(instance) ? "yes" : "no")
          << endl;
+    cout << tab << "Total inter-partition traffic: "
+         << total_inter_traffic(instance)
+         << endl;
 }
 
 void mock_initialize_partitions(Instance *test_instance) {
@@ -265,7 +348,7 @@ void greedy_initialize_partitions(Instance *instance) {
         int i;
         for (i = current_node; i < instance->node_count; ++i) {
              nodes.emplace_back(i);
-             if (traffic(nodes, *instance) > instance->max_partition_traffic) {
+             if (in_out_node_traffic(nodes, *instance) > instance->max_partition_traffic) {
                  nodes.pop_back();
                  break;
              }

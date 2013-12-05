@@ -23,6 +23,7 @@ int main(int argc, char* argv[]) {
             cout << "NAIVE INIT" << endl;
             show_instance(instance);
 
+            /*
             instance_file.seekg(0, instance_file.beg);
            
             Instance test_instance;
@@ -35,7 +36,7 @@ int main(int argc, char* argv[]) {
                 //show_instance(test_instance);
             }
             show_instance(test_instance);
-            
+            */
             instance_file.seekg(0, instance_file.beg);
 
             Instance test_instance2;
