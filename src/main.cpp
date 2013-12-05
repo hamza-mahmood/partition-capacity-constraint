@@ -43,11 +43,6 @@ int main(int argc, char* argv[]) {
             read_instance(instance_file, &test_instance2);
             greedy_initialize_partitions(&test_instance2);
             cout << "GREEDY INIT" << endl;
-            //show_instance(test_instance2);
-            while (!is_coherent(test_instance2.partitions)) {
-                coherence_step(&test_instance2.partitions);
-                //show_instance(test_instance2);
-            }
             show_instance(test_instance2);
 
         } 
