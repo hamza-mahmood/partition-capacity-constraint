@@ -4,7 +4,6 @@
 #include<iostream>
 
 #include "instance_def.h"
-#include "traffic.h"
 
 int in_out_node_traffic(const vector<int> &nodes, const Instance &instance);
 int intra_traffic(const int p, const Instance &instance);
