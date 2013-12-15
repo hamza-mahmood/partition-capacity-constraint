@@ -1,5 +1,28 @@
 #include "traffic.h"
 
+bool is_partition_empty(const Instance &instance, const int p) {
+    bool result = true;
+    for (size_t i = 0; i < instance.partitions.size(); ++i) {
+        if (instance.partitions[p][i] == true) {
+            return false;
+        }
+    }
+    return result;
+}
+
+pair<int, int> proper_edge(const int i, const int j) {
+    pair<int, int> edge;
+    if (i == j) {
+        cout << "BIG PROBLEM HERE" << endl;
+        edge = make_pair(i, j);
+    } else if (i < j) {
+        edge = make_pair(i, j);
+    } else if (i > j) {
+        edge = make_pair(j, i);
+    }
+    return edge;
+}
+
 // Find nodes in partition p.
 //      @param[in] p: index of partition
 //      @param[in] instance: instance
@@ -29,15 +52,9 @@ int intra_traffic(const int p, const Instance &instance) {
             int node_i = *node_it; int node_j = neighbour_it->second;
 
             if (instance.partitions[p][node_j]) {
-                if (node_i < node_j) {
-                    pair<int, int> edge(node_i, node_j);
-                    int e_traffic = instance.traffic_of_edge.find(edge)->second;
-                    traffic += e_traffic;
-                } else {
-                    pair<int, int> edge(node_j, node_i);
-                    int e_traffic = instance.traffic_of_edge.find(edge)->second;
-                    traffic += e_traffic;
-                }
+                pair<int, int> edge = proper_edge(node_i, node_j);
+                int edge_traffic = instance.traffic_of_edge.find(edge)->second;
+                traffic += edge_traffic;
             }
         }
     }
@@ -58,15 +75,9 @@ int in_out_node_traffic(const vector<int> &nodes, const Instance &instance) {
             int node_i = *node_it;
             int node_j = neighbour_it->second;
             
-            if (node_i < node_j) {
-                pair<int, int> edge(node_i, node_j);
-                int edge_traffic = instance.traffic_of_edge.find(edge)->second;
-                traffic += edge_traffic;
-            } else {
-                pair<int, int> edge(node_j, node_i);
-                int edge_traffic = instance.traffic_of_edge.find(edge)->second;
-                traffic += edge_traffic;
-            }
+            pair<int, int> edge = proper_edge(node_i, node_j);
+            int edge_traffic = instance.traffic_of_edge.find(edge)->second;
+            traffic += edge_traffic;
         }
     }
     return traffic;

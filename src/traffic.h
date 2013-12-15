@@ -12,4 +12,10 @@ int total_traffic(const Instance &instance);
 int total_intra_traffic(const Instance &instance);
 int total_inter_traffic(const Instance &instance);
 
+// UTILS
+void nodes_in_partition(const int p, const Instance &instance,
+                        vector<int> *nodes);
+pair<int, int> proper_edge(const int i, const int j);
+bool is_partition_empty(const Instance &instance, const int p);
+
 #endif

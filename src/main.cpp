@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include "instance.h"
+#include "heuristic.h"
 
 using namespace std;
 
@@ -44,6 +45,10 @@ int main(int argc, char* argv[]) {
             greedy_initialize_partitions(&test_instance2);
             cout << "GREEDY INIT" << endl;
             show_instance(test_instance2);
+            cout << "FIRST IMPROVING" << endl;
+            giving_first_improving(test_instance2);
+            cout << "BEST IMPROVING" << endl;
+            giving_best_improving(test_instance2);
 
         } 
     }
